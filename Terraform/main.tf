@@ -5,6 +5,18 @@ data "oci_identity_availability_domains" "ads" {
 locals {
   selected_availability_domain = var.availability_domain != "" ? var.availability_domain : data.oci_identity_availability_domains.ads.availability_domains[0].name
   ssh_public_key               = var.ssh_public_key != "" ? trimspace(var.ssh_public_key) : (var.ssh_public_key_path != "" ? trimspace(file(pathexpand(var.ssh_public_key_path))) : "")
+  cloud_init_user_data = base64encode(<<-EOT
+    #cloud-config
+    package_update: true
+    packages:
+      - firewalld
+    runcmd:
+      - [ bash, -lc, 'firewall-offline-cmd --zone=public --add-service=ssh' ]
+      - [ bash, -lc, 'firewall-offline-cmd --zone=public --add-port=8080/tcp' ]
+      - [ bash, -lc, 'systemctl enable firewalld' ]
+      - [ bash, -lc, 'systemctl start firewalld' ]
+  EOT
+  )
 }
 
 resource "terraform_data" "required_inputs" {
@@ -136,6 +148,7 @@ resource "oci_core_instance" "this" {
 
   metadata = {
     ssh_authorized_keys = local.ssh_public_key
+    user_data           = local.cloud_init_user_data
   }
 
   lifecycle {
