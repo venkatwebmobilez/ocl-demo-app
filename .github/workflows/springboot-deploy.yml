@@ -30,6 +30,9 @@ jobs:
           java-version: "17"
           cache: gradle
 
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
       - name: Build jar
         run: ./gradlew clean bootJar
 
