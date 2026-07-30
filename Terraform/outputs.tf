@@ -19,7 +19,6 @@ output "private_ip" {
 }
 
 output "public_ip" {
-  value       = data.oci_core_vnic.primary.public_ip_address
+  value       = oci_core_public_ip.instance.ip_address
   description = "Public IP assigned to the instance."
 }
-

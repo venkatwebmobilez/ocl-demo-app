@@ -130,7 +130,7 @@ resource "oci_core_instance" "this" {
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.public.id
-    assign_public_ip = true
+    assign_public_ip = false
     hostname_label   = "tfoci"
   }
 
@@ -153,4 +153,17 @@ data "oci_core_vnic_attachments" "instance" {
 
 data "oci_core_vnic" "primary" {
   vnic_id = data.oci_core_vnic_attachments.instance.vnic_attachments[0].vnic_id
+}
+
+data "oci_core_private_ips" "primary" {
+  subnet_id  = oci_core_subnet.public.id
+  ip_address = data.oci_core_vnic.primary.private_ip_address
+}
+
+resource "oci_core_public_ip" "instance" {
+  compartment_id = var.compartment_id
+  lifetime       = "EPHEMERAL"
+  private_ip_id  = data.oci_core_private_ips.primary.private_ips[0].id
+
+  depends_on = [oci_core_instance.this]
 }
