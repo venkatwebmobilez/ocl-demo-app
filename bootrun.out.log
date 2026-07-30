@@ -1,0 +1,27 @@
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :resolveMainClassName
+
+> Task :bootRun
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v4.1.0)
+
+2026-07-30T15:50:14.377+05:30  INFO 28404 --- [demo] [           main] com.example.demo.DemoApplication         : Starting DemoApplication using Java 17.0.13 with PID 28404 (D:\demo\build\classes\java\main started by venkatesh in D:\demo)
+2026-07-30T15:50:14.385+05:30  INFO 28404 --- [demo] [           main] com.example.demo.DemoApplication         : No active profile set, falling back to 1 default profile: "default"
+2026-07-30T15:50:15.630+05:30  INFO 28404 --- [demo] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+2026-07-30T15:50:15.649+05:30  INFO 28404 --- [demo] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-07-30T15:50:15.650+05:30  INFO 28404 --- [demo] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.22]
+2026-07-30T15:50:15.742+05:30  INFO 28404 --- [demo] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 1194 ms
+2026-07-30T15:50:16.221+05:30  INFO 28404 --- [demo] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+2026-07-30T15:50:16.228+05:30  INFO 28404 --- [demo] [           main] com.example.demo.DemoApplication         : Started DemoApplication in 2.667 seconds (process running for 3.279)
+2026-07-30T15:50:18.338+05:30  INFO 28404 --- [demo] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-30T15:50:18.338+05:30  INFO 28404 --- [demo] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-07-30T15:50:18.340+05:30  INFO 28404 --- [demo] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
