@@ -100,6 +100,18 @@ variable "allowed_ssh_cidrs" {
   default     = ["0.0.0.0/0"]
 }
 
+variable "allowed_app_cidrs" {
+  description = "CIDR blocks allowed to reach the Spring Boot app."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "app_port" {
+  description = "TCP port exposed by the Spring Boot app."
+  type        = number
+  default     = 8080
+}
+
 variable "instance_display_name" {
   description = "Display name for the compute instance."
   type        = string

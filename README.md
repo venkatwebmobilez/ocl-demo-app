@@ -62,6 +62,18 @@ terraform plan
 terraform apply
 ```
 
+## Spring Boot deploy workflow
+
+The workflow at [`.github/workflows/springboot-deploy.yml`](<D:\untitled\.github\workflows\springboot-deploy.yml:1>) builds the app with Gradle, copies the JAR to the OCI VM, and restarts it over SSH.
+
+Required GitHub secrets:
+
+- `OCI_INSTANCE_PUBLIC_IP`
+- `OCI_SSH_USER`
+- `OCI_DEPLOY_SSH_PRIVATE_KEY`
+
+The OCI security list also opens port `8080` for the app.
+
 ## GitHub Actions
 
 The workflow expects these secrets for manual deploys:
