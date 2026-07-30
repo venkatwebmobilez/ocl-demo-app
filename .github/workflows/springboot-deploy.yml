@@ -1,0 +1,68 @@
+name: Deploy Spring Boot App
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "src/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle/**"
+      - ".github/workflows/springboot-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Build jar
+        run: ./gradlew clean bootJar
+
+      - name: Write SSH key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.OCI_DEPLOY_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/oci_deploy_key
+          chmod 600 ~/.ssh/oci_deploy_key
+
+      - name: Trust host key
+        env:
+          DEPLOY_HOST: ${{ secrets.OCI_INSTANCE_PUBLIC_IP }}
+        run: |
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Copy jar to OCI instance
+        env:
+          DEPLOY_HOST: ${{ secrets.OCI_INSTANCE_PUBLIC_IP }}
+          DEPLOY_USER: ${{ secrets.OCI_SSH_USER }}
+        run: |
+          JAR_FILE=$(find build/libs -maxdepth 1 -name '*.jar' ! -name '*plain.jar' | head -n 1)
+          test -n "$JAR_FILE"
+          scp -i ~/.ssh/oci_deploy_key "$JAR_FILE" "${DEPLOY_USER}@${DEPLOY_HOST}:demo.jar"
+
+      - name: Restart app
+        env:
+          DEPLOY_HOST: ${{ secrets.OCI_INSTANCE_PUBLIC_IP }}
+          DEPLOY_USER: ${{ secrets.OCI_SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/oci_deploy_key "${DEPLOY_USER}@${DEPLOY_HOST}" <<'EOF'
+          set -e
+          pkill -f 'java -jar demo.jar' || true
+          nohup java -jar demo.jar > demo.log 2>&1 &
+          EOF
