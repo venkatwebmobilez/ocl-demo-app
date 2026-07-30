@@ -56,6 +56,8 @@ jobs:
   deploy:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    outputs:
+      public_ip: ${{ steps.public_ip.outputs.public_ip }}
     defaults:
       run:
         shell: bash
@@ -98,3 +100,68 @@ jobs:
       - name: Terraform apply
         if: github.event.inputs.action == 'apply'
         run: terraform apply -auto-approve tfplan
+
+      - name: Show public IP
+        id: public_ip
+        if: github.event.inputs.action == 'apply'
+        run: |
+          PUBLIC_IP=$(terraform output -raw public_ip)
+          echo "Public IP: $PUBLIC_IP"
+          echo "public_ip=$PUBLIC_IP" >> "$GITHUB_OUTPUT"
+          {
+            echo "### OCI Instance Public IP"
+            echo ""
+            echo "$PUBLIC_IP"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  deploy_app:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Build jar
+        run: ./gradlew clean bootJar
+
+      - name: Write SSH key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.OCI_DEPLOY_SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/oci_deploy_key
+          chmod 600 ~/.ssh/oci_deploy_key
+
+      - name: Trust host key
+        env:
+          DEPLOY_HOST: ${{ needs.deploy.outputs.public_ip }}
+        run: |
+          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Copy jar to OCI instance
+        env:
+          DEPLOY_HOST: ${{ needs.deploy.outputs.public_ip }}
+          DEPLOY_USER: ${{ secrets.OCI_SSH_USER }}
+        run: |
+          JAR_FILE=$(find build/libs -maxdepth 1 -name '*.jar' ! -name '*plain.jar' | head -n 1)
+          test -n "$JAR_FILE"
+          scp -i ~/.ssh/oci_deploy_key "$JAR_FILE" "${DEPLOY_USER}@${DEPLOY_HOST}:demo.jar"
+
+      - name: Restart app
+        env:
+          DEPLOY_HOST: ${{ needs.deploy.outputs.public_ip }}
+          DEPLOY_USER: ${{ secrets.OCI_SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/oci_deploy_key "${DEPLOY_USER}@${DEPLOY_HOST}" <<'EOF'
+          set -e
+          pkill -f 'java -jar demo.jar' || true
+          nohup java -jar demo.jar > demo.log 2>&1 &
+          EOF
