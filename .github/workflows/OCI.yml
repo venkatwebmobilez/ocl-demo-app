@@ -147,7 +147,15 @@ jobs:
         env:
           DEPLOY_HOST: ${{ needs.deploy.outputs.public_ip }}
         run: |
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+          mkdir -p ~/.ssh
+          for attempt in 1 2 3 4 5 6; do
+            if ssh-keyscan -T 10 -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Failed to fetch SSH host key for $DEPLOY_HOST" >&2
+          exit 1
 
       - name: Copy jar to OCI instance
         env:
